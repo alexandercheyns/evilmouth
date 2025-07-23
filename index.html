@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Looping Animation with Random Breaks</title>
+  <title>Time-Sensitive Looping Animations</title>
   <style>
     /* Fullscreen black background, centered video */
     html, body {
@@ -24,10 +24,9 @@
   </style>
 </head>
 <body>
-  <!-- Place the video file in the same directory as this HTML file -->
+  <!-- Video element; script assigns source and looping behavior based on local time -->
   <video 
     id="animationVideo"
-    src="social_zool9727_cute_laughing_giant_mouth_then_he_looks_suprised_and_afbc1871-a2ab-4bd7-8bd4-0583121ce5b1_3.mp4" 
     autoplay 
     muted 
     playsinline>
@@ -36,24 +35,44 @@
 
   <script>
     const video = document.getElementById('animationVideo');
-    // Remove default loop, handle looping manually with random breaks
-    video.loop = false;
+    video.loop = false; // manual looping
 
-    // Configuration for random break durations (in milliseconds)
+    // File paths
+    const sleepingSrc = 'social_zool9727_sleeping_mouth_animation_video_--ar_11_--motion_low__f579137a-4e74-4633-9461-f05e6d7ab7d8_0.mp4';
+    const laughingSrc = 'social_zool9727_cute_laughing_giant_mouth_then_he_looks_suprised_and_afbc1871-a2ab-4bd7-8bd4-0583121ce5b1_3.mp4';
+
+    // Determine if current time is between 02:00 (inclusive) and 14:00 (exclusive)
+    const hour = new Date().getHours();
+    const isSleepingTime = hour >= 2 && hour < 14;
+
+    // Assign appropriate source
+    video.src = isSleepingTime ? sleepingSrc : laughingSrc;
+
+    // Random-break parameters for the laughing animation
     const minBreak = 1000; // 1 second
     const maxBreak = 5000; // 5 seconds
 
+    // Start playback
+    video.play();
+
+    // Loop handling
     video.addEventListener('ended', () => {
-      // Calculate a random break duration between min and max
-      const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
-      console.log(`Pausing for ${Math.round(breakDuration)} ms before replay.`);
-      setTimeout(() => {
+      if (isSleepingTime) {
+        // Immediately replay sleeping animation
         video.currentTime = 0;
         video.play();
-      }, breakDuration);
+      } else {
+        // Random break before replaying laughing animation
+        const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
+        console.log(`Pausing for ${Math.round(breakDuration)} ms before replay.`);
+        setTimeout(() => {
+          video.currentTime = 0;
+          video.play();
+        }, breakDuration);
+      }
     });
 
-    // Refresh the page every hour (3600000 ms)
+    // Refresh the page every hour
     setInterval(() => {
       console.log('Refreshing page after one hour.');
       location.reload();
