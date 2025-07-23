@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Looping Animation with Random Breaks</title>
+  <style>
+    /* Fullscreen black background, centered video */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    video {
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Place the video file in the same directory as this HTML file -->
+  <video 
+    id="animationVideo"
+    src="social_zool9727_cute_laughing_giant_mouth_then_he_looks_suprised_and_afbc1871-a2ab-4bd7-8bd4-0583121ce5b1_3.mp4" 
+    autoplay 
+    muted 
+    playsinline>
+    Your browser does not support the video tag.
+  </video>
+
+  <script>
+    const video = document.getElementById('animationVideo');
+    // Remove default loop, handle looping manually with random breaks
+    video.loop = false;
+
+    // Configuration for random break durations (in milliseconds)
+    const minBreak = 1000; // 1 second
+    const maxBreak = 5000; // 5 seconds
+
+    video.addEventListener('ended', () => {
+      // Calculate a random break duration between min and max
+      const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
+      console.log(`Pausing for ${Math.round(breakDuration)} ms before replay.`);
+      setTimeout(() => {
+        video.currentTime = 0;
+        video.play();
+      }, breakDuration);
+    });
+
+    // Refresh the page every hour (3600000 ms)
+    setInterval(() => {
+      console.log('Refreshing page after one hour.');
+      location.reload();
+    }, 3600000);
+  </script>
+</body>
+</html>
