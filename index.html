@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Time-Sensitive Looping Animations</title>
   <style>
     /* Fullscreen black background, centered video */
@@ -25,10 +25,10 @@
 </head>
 <body>
   <!-- Video element; script assigns source and looping behavior based on local time -->
-  <video 
+  <video
     id="animationVideo"
-    autoplay 
-    muted 
+    autoplay
+    muted
     playsinline>
     Your browser does not support the video tag.
   </video>
@@ -72,11 +72,36 @@
       }
     });
 
-    // Refresh the page every hour
-    setInterval(() => {
-      console.log('Refreshing page after one hour.');
-      location.reload();
-    }, 3600000);
+    // —————— Schedule daily reloads at 02:01 and 14:01 ——————
+    function scheduleDailyReloads() {
+      const now = new Date();
+      // times to refresh (hours and minutes)
+      const refreshTimes = [
+        { h: 2,  m: 1 },
+        { h: 14, m: 1 }
+      ];
+
+      refreshTimes.forEach(({ h, m }) => {
+        // build a Date for today at h:m
+        let target = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          h, m, 0, 0
+        );
+        // if that time has already passed today, shift to tomorrow
+        if (target <= now) {
+          target.setDate(target.getDate() + 1);
+        }
+        const delay = target.getTime() - now.getTime();
+        console.log(`Scheduling reload at ${target.toLocaleString()}`);
+        setTimeout(() => {
+          location.reload();
+        }, delay);
+      });
+    }
+
+    scheduleDailyReloads();
   </script>
 </body>
 </html>
