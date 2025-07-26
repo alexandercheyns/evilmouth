@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crossfade Video Loop</title>
+  <title>Smooth Crossfade Videos</title>
   <style>
     html, body {
       margin: 0;
@@ -38,8 +38,8 @@
 </head>
 <body>
   <div class="video-container">
-    <video id="video1" muted playsinline></video>
-    <video id="video2" muted playsinline></video>
+    <video id="video1" muted playsinline preload="auto"></video>
+    <video id="video2" muted playsinline preload="auto"></video>
   </div>
 
   <script>
@@ -66,16 +66,18 @@
       const prevVideo = currentVideo;
 
       nextVideo.src = src;
-      nextVideo.currentTime = 0;
       nextVideo.load();
 
-      nextVideo.onloadeddata = () => {
+      nextVideo.addEventListener('canplaythrough', function handleCanPlay() {
+        nextVideo.removeEventListener('canplaythrough', handleCanPlay);
+        nextVideo.currentTime = 0;
         nextVideo.play();
+
         nextVideo.classList.add('visible');
         prevVideo.classList.remove('visible');
         prevVideo.pause();
         currentVideo = nextVideo;
-      };
+      });
     }
 
     function playRandomDaytimeVideo() {
@@ -101,7 +103,7 @@
       playRandomDaytimeVideo();
     }
 
-    // Attach 'ended' event to both videos
+    // Attach ended listener to both
     [videoA, videoB].forEach(video => {
       video.addEventListener('ended', () => {
         if (isSleepingTime) {
@@ -111,7 +113,7 @@
           const minBreak = 1000;
           const maxBreak = 5000;
           const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
-          console.log(`Waiting ${Math.round(breakDuration)} ms before crossfade`);
+          console.log(`Waiting ${Math.round(breakDuration)} ms before crossfade.`);
           setTimeout(() => {
             playRandomDaytimeVideo();
           }, breakDuration);
@@ -119,11 +121,10 @@
       });
     });
 
-    // Scheduled reloads
     function scheduleDailyReloads() {
       const now = new Date();
       const refreshTimes = [
-        { h: 2,  m: 1 },
+        { h: 2, m: 1 },
         { h: 14, m: 1 }
       ];
 
@@ -140,11 +141,10 @@
 
     scheduleDailyReloads();
 
-    // Hourly refresh
     setInterval(() => {
       console.log('Refreshing site after 1 hour');
       location.reload();
-    }, 3600000);
+    }, 3600000); // hourly refresh
   </script>
 </body>
 </html>
