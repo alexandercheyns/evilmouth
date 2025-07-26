@@ -26,7 +26,7 @@
       height: 100%;
       object-fit: contain;
       opacity: 0;
-      transition: opacity 0.25s ease-in-out; /* faster and smoother */
+      transition: opacity 0.75s ease-in-out; /* ← smoother and longer fade */
       z-index: 1;
     }
 
@@ -75,13 +75,12 @@
         nextVideo.currentTime = 0;
         nextVideo.play();
 
-        // fade transition
         nextVideo.classList.add('visible');
         prevVideo.classList.remove('visible');
         prevVideo.pause();
 
         currentVideo = nextVideo;
-        attachProactiveFadeMonitor(); // set up monitor again
+        attachProactiveFadeMonitor();
       });
     }
 
@@ -107,7 +106,7 @@
         if (
           !fadeTriggered &&
           currentVideo.duration &&
-          currentVideo.currentTime >= currentVideo.duration - 0.3 // fade 0.3s before end
+          currentVideo.currentTime >= currentVideo.duration - 0.8 // ← start earlier to match 0.75s fade
         ) {
           fadeTriggered = true;
           currentVideo.removeEventListener('timeupdate', monitorFade);
@@ -124,7 +123,6 @@
       });
     }
 
-    // Initial load
     if (isSleepingTime) {
       playSleepingLoop();
     } else {
