@@ -11,37 +11,44 @@
       width: 100%;
       height: 100%;
       background-color: black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       overflow: hidden;
     }
 
-    video {
-      max-width: 120%;
-      max-height: 120%;
-      opacity: 1;
-      transition: opacity 0.4s ease-in-out;
+    .video-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
     }
 
-    .fade-out {
+    video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    video.visible {
+      opacity: 1;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
-  <video id="animationVideo" autoplay muted playsinline>
-    Your browser does not support the video tag.
-  </video>
+  <div class="video-container">
+    <video id="video1" muted playsinline></video>
+    <video id="video2" muted playsinline></video>
+  </div>
 
   <script>
-    const video = document.getElementById('animationVideo');
-    video.loop = false;
+    const videoA = document.getElementById('video1');
+    const videoB = document.getElementById('video2');
+    let currentVideo = videoA;
 
-    // Sleeping video (used from 02:00 to 14:00)
     const sleepingSrc = 'social_zool9727_sleeping_mouth_animation_video_--ar_11_--motion_low__f579137a-4e74-4633-9461-f05e6d7ab7d8_0.mp4';
-
-    // Updated daytime videos
     const daytimeVideos = [
       'mond1.mp4',
       'mond2.mp4',
@@ -53,17 +60,22 @@
 
     const hour = new Date().getHours();
     const isSleepingTime = hour >= 2 && hour < 14;
-
     let lastPlayedIndex = -1;
 
-    function fadeToNewSource(newSrc) {
-      video.classList.add('fade-out');
-      setTimeout(() => {
-        video.src = newSrc;
-        video.currentTime = 0;
-        video.play();
-        video.classList.remove('fade-out');
-      }, 400); // match CSS transition time
+    // Crossfade function: loads new video into hidden player, swaps visibility
+    function crossfadeTo(src) {
+      const nextVideo = currentVideo === videoA ? videoB : videoA;
+
+      nextVideo.src = src;
+      nextVideo.currentTime = 0;
+
+      nextVideo.onloadeddata = () => {
+        nextVideo.play();
+        currentVideo.classList.remove('visible');
+        nextVideo.classList.add('visible');
+        currentVideo.pause();
+        currentVideo = nextVideo;
+      };
     }
 
     function playRandomDaytimeVideo() {
@@ -73,34 +85,38 @@
       } while (daytimeVideos.length > 1 && nextIndex === lastPlayedIndex);
 
       lastPlayedIndex = nextIndex;
-      fadeToNewSource(daytimeVideos[nextIndex]);
+      crossfadeTo(daytimeVideos[nextIndex]);
     }
 
-    // Initial video load
+    function playSleepingLoop() {
+      currentVideo.src = sleepingSrc;
+      currentVideo.classList.add('visible');
+      currentVideo.loop = true;
+      currentVideo.play();
+    }
+
     if (isSleepingTime) {
-      video.src = sleepingSrc;
-      video.play();
+      playSleepingLoop();
     } else {
       playRandomDaytimeVideo();
     }
 
-    // Handle end of each video
-    video.addEventListener('ended', () => {
+    currentVideo.addEventListener('ended', () => {
       if (isSleepingTime) {
-        video.currentTime = 0;
-        video.play();
+        currentVideo.currentTime = 0;
+        currentVideo.play();
       } else {
         const minBreak = 1000;
         const maxBreak = 5000;
         const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
-        console.log(`Pausing for ${Math.round(breakDuration)} ms before replay.`);
+        console.log(`Pausing for ${Math.round(breakDuration)} ms before crossfade.`);
         setTimeout(() => {
           playRandomDaytimeVideo();
         }, breakDuration);
       }
     });
 
-    // Scheduled reloads at 2:01 and 14:01
+    // Reloads at 2:01 and 14:01
     function scheduleDailyReloads() {
       const now = new Date();
       const refreshTimes = [
@@ -121,11 +137,11 @@
 
     scheduleDailyReloads();
 
-    // Refresh every hour
+    // Hourly refresh
     setInterval(() => {
       console.log('Refreshing site after 1 hour');
       location.reload();
-    }, 3600000); // 1 hour
+    }, 3600000);
   </script>
 </body>
 </html>
