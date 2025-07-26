@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Time-Sensitive Looping Animations</title>
+  <title>Crossfade Video Loop</title>
   <style>
     html, body {
       margin: 0;
@@ -22,13 +22,12 @@
 
     video {
       position: absolute;
-      top: 0;
-      left: 0;
       width: 100%;
       height: 100%;
       object-fit: contain;
       opacity: 0;
       transition: opacity 0.5s ease-in-out;
+      z-index: 1;
     }
 
     video.visible {
@@ -62,18 +61,19 @@
     const isSleepingTime = hour >= 2 && hour < 14;
     let lastPlayedIndex = -1;
 
-    // Crossfade function: loads new video into hidden player, swaps visibility
     function crossfadeTo(src) {
       const nextVideo = currentVideo === videoA ? videoB : videoA;
+      const prevVideo = currentVideo;
 
       nextVideo.src = src;
       nextVideo.currentTime = 0;
+      nextVideo.load();
 
       nextVideo.onloadeddata = () => {
         nextVideo.play();
-        currentVideo.classList.remove('visible');
         nextVideo.classList.add('visible');
-        currentVideo.pause();
+        prevVideo.classList.remove('visible');
+        prevVideo.pause();
         currentVideo = nextVideo;
       };
     }
@@ -90,8 +90,8 @@
 
     function playSleepingLoop() {
       currentVideo.src = sleepingSrc;
-      currentVideo.classList.add('visible');
       currentVideo.loop = true;
+      currentVideo.classList.add('visible');
       currentVideo.play();
     }
 
@@ -101,22 +101,25 @@
       playRandomDaytimeVideo();
     }
 
-    currentVideo.addEventListener('ended', () => {
-      if (isSleepingTime) {
-        currentVideo.currentTime = 0;
-        currentVideo.play();
-      } else {
-        const minBreak = 1000;
-        const maxBreak = 5000;
-        const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
-        console.log(`Pausing for ${Math.round(breakDuration)} ms before crossfade.`);
-        setTimeout(() => {
-          playRandomDaytimeVideo();
-        }, breakDuration);
-      }
+    // Attach 'ended' event to both videos
+    [videoA, videoB].forEach(video => {
+      video.addEventListener('ended', () => {
+        if (isSleepingTime) {
+          video.currentTime = 0;
+          video.play();
+        } else {
+          const minBreak = 1000;
+          const maxBreak = 5000;
+          const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
+          console.log(`Waiting ${Math.round(breakDuration)} ms before crossfade`);
+          setTimeout(() => {
+            playRandomDaytimeVideo();
+          }, breakDuration);
+        }
+      });
     });
 
-    // Reloads at 2:01 and 14:01
+    // Scheduled reloads
     function scheduleDailyReloads() {
       const now = new Date();
       const refreshTimes = [
