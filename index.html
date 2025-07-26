@@ -27,78 +27,82 @@
     Your browser does not support the video tag.
   </video>
 
- <script>
-  const video = document.getElementById('animationVideo');
-  video.loop = false;
+  <script>
+    const video = document.getElementById('animationVideo');
+    video.loop = false;
 
-  const sleepingSrc = 'social_zool9727_sleeping_mouth_animation_video_--ar_11_--motion_low__f579137a-4e74-4633-9461-f05e6d7ab7d8_0.mp4';
-  const daytimeVideos = [
-    'social_zool9727_httpss.mj.runa8mKeplsJLs_mouth_drinking_a_beer_--ar__cb62e960-8a43-4f7f-9830-3cb003f72c1f_1.mp4',
-    'social_zool9727_httpss.mj.runa8mKeplsJLs_mouth_drinking_a_beer_--ar__cb62e960-8a43-4f7f-9830-3cb003f72c1f_3.mp4',
-    'social_zool9727_cute_laughing_giant_mouth_then_he_looks_suprised_and_afbc1871-a2ab-4bd7-8bd4-0583121ce5b1_3.mp4'
-  ];
+    const sleepingSrc = 'social_zool9727_sleeping_mouth_animation_video_--ar_11_--motion_low__f579137a-4e74-4633-9461-f05e6d7ab7d8_0.mp4';
 
-  const hour = new Date().getHours();
-  const isSleepingTime = hour >= 2 && hour < 14;
-
-  function playRandomDaytimeVideo() {
-    const randomIndex = Math.floor(Math.random() * daytimeVideos.length);
-    video.src = daytimeVideos[randomIndex];
-    video.currentTime = 0;
-    video.play();
-  }
-
-  if (isSleepingTime) {
-    video.src = sleepingSrc;
-    video.play();
-  } else {
-    playRandomDaytimeVideo();
-  }
-
-  video.addEventListener('ended', () => {
-    if (isSleepingTime) {
-      video.currentTime = 0;
-      video.play();
-    } else {
-      const minBreak = 1000;
-      const maxBreak = 5000;
-      const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
-      console.log(`Pausing for ${Math.round(breakDuration)} ms before replay.`);
-      setTimeout(() => {
-        playRandomDaytimeVideo();
-      }, breakDuration);
-    }
-  });
-
-  // Reload at 02:01 and 14:01 to switch states
-  function scheduleDailyReloads() {
-    const now = new Date();
-    const refreshTimes = [
-      { h: 2,  m: 1 },
-      { h: 14, m: 1 }
+    const daytimeVideos = [
+      'social_zool9727_httpss.mj.runa8mKeplsJLs_mouth_drinking_a_beer_--ar__cb62e960-8a43-4f7f-9830-3cb003f72c1f_1.mp4',
+      'social_zool9727_httpss.mj.runa8mKeplsJLs_mouth_drinking_a_beer_--ar__cb62e960-8a43-4f7f-9830-3cb003f72c1f_3.mp4',
+       'social_zool9727_cute_laughing_giant_mouth_then_he_looks_suprised_and_afbc1871-a2ab-4bd7-8bd4-0583121ce5b1_3.mp4'
     ];
 
-    refreshTimes.forEach(({ h, m }) => {
-      let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
-      if (target <= now) target.setDate(target.getDate() + 1);
-      const delay = target.getTime() - now.getTime();
-      console.log(`Scheduling reload at ${target.toLocaleString()}`);
-      setTimeout(() => {
-        location.reload();
-      }, delay);
+    const hour = new Date().getHours();
+    const isSleepingTime = hour >= 2 && hour < 14;
+
+    let lastPlayedIndex = -1;
+
+    function playRandomDaytimeVideo() {
+      let nextIndex;
+      do {
+        nextIndex = Math.floor(Math.random() * daytimeVideos.length);
+      } while (daytimeVideos.length > 1 && nextIndex === lastPlayedIndex);
+
+      lastPlayedIndex = nextIndex;
+      video.src = daytimeVideos[nextIndex];
+      video.currentTime = 0;
+      video.play();
+    }
+
+    if (isSleepingTime) {
+      video.src = sleepingSrc;
+      video.play();
+    } else {
+      playRandomDaytimeVideo();
+    }
+
+    video.addEventListener('ended', () => {
+      if (isSleepingTime) {
+        video.currentTime = 0;
+        video.play();
+      } else {
+        const minBreak = 1000;
+        const maxBreak = 5000;
+        const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
+        console.log(`Pausing for ${Math.round(breakDuration)} ms before replay.`);
+        setTimeout(() => {
+          playRandomDaytimeVideo();
+        }, breakDuration);
+      }
     });
-  }
 
-  scheduleDailyReloads();
+    function scheduleDailyReloads() {
+      const now = new Date();
+      const refreshTimes = [
+        { h: 2,  m: 1 },
+        { h: 14, m: 1 }
+      ];
 
-  // —————— New: Hourly refresh ——————
-  setInterval(() => {
-    console.log('Refreshing site after 1 hour');
-    location.reload();
-  }, 3600000); // 1 hour = 3600000 ms
-</script>
+      refreshTimes.forEach(({ h, m }) => {
+        let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+        if (target <= now) target.setDate(target.getDate() + 1);
+        const delay = target.getTime() - now.getTime();
+        console.log(`Scheduling reload at ${target.toLocaleString()}`);
+        setTimeout(() => {
+          location.reload();
+        }, delay);
+      });
+    }
 
+    scheduleDailyReloads();
+
+    // Refresh the page every 1 hour
+    setInterval(() => {
+      console.log('Refreshing site after 1 hour');
+      location.reload();
+    }, 3600000); // 1 hour = 3600000 ms
+  </script>
 </body>
 </html>
-
-
