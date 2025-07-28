@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,7 +27,7 @@
       height: 100%;
       object-fit: contain;
       opacity: 0;
-      transition: opacity 1.25s ease-in-out; /* ← extended duration */
+      transition: opacity 1.25s ease-in-out;
       z-index: 1;
     }
 
@@ -59,7 +60,9 @@
     ];
 
     const hour = new Date().getHours();
-    const isSleepingTime = hour >= 2 && hour < 14;
+    const day = new Date().getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const isSundayOrMonday = day === 0 || day === 1;
+    const isSleepingTime = hour >= 2 && hour < 14 && !isSundayOrMonday;
     let lastPlayedIndex = -1;
 
     function crossfadeTo(src) {
@@ -106,7 +109,7 @@
         if (
           !fadeTriggered &&
           currentVideo.duration &&
-          currentVideo.currentTime >= currentVideo.duration - 1.3 // ← trigger early to match 1.25s fade
+          currentVideo.currentTime >= currentVideo.duration - 1.3
         ) {
           fadeTriggered = true;
           currentVideo.removeEventListener('timeupdate', monitorFade);
@@ -123,7 +126,12 @@
       });
     }
 
-    if (isSleepingTime) {
+    if (isSundayOrMonday) {
+      currentVideo.src = 'bernardus1.mp4';
+      currentVideo.loop = true;
+      currentVideo.classList.add('visible');
+      currentVideo.play();
+    } else if (isSleepingTime) {
       playSleepingLoop();
     } else {
       playRandomDaytimeVideo();
