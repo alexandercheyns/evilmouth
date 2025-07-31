@@ -1,167 +1,128 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crossfade Video Loop</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background-color: black;
-      overflow: hidden;
-    }
+<script>
+  const videoA = document.getElementById('video1');
+  const videoB = document.getElementById('video2');
+  let currentVideo = videoA;
+  let fadeTriggered = false;
 
-    .video-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
+  const sleepingSrc = 'social_zool9727_sleeping_mouth_animation_video_--ar_11_--motion_low__f579137a-4e74-4633-9461-f05e6d7ab7d8_0.mp4';
+  const vanderghinsteSrc = 'vanderghinste.mp4';
+  const daytimeVideos = [
+    'mond1.mp4',
+    'mond2.mp4',
+    'mond3.mp4',
+    'mond4.mp4',
+    'mond5.mp4',
+    'mond6.mp4'
+  ];
 
-    video {
-      position: absolute;
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      opacity: 0;
-      transition: opacity 1.25s ease-in-out;
-      z-index: 1;
-    }
+  const hour = new Date().getHours();
+  const day = new Date().getDay(); // 0 = Sunday, ..., 4 = Thursday
+  const isSundayOrMonday = day === 0 || day === 1;
+  const isThursday = day === 4;
+  const isSleepingTime = hour >= 2 && hour < 14 && !isSundayOrMonday && !isThursday;
+  let lastPlayedIndex = -1;
 
-    video.visible {
-      opacity: 1;
-      z-index: 2;
-    }
-  </style>
-</head>
-<body>
-  <div class="video-container">
-    <video id="video1" muted playsinline preload="auto"></video>
-    <video id="video2" muted playsinline preload="auto"></video>
-  </div>
+  function crossfadeTo(src) {
+    const nextVideo = currentVideo === videoA ? videoB : videoA;
+    const prevVideo = currentVideo;
 
-  <script>
-    const videoA = document.getElementById('video1');
-    const videoB = document.getElementById('video2');
-    let currentVideo = videoA;
-    let fadeTriggered = false;
+    nextVideo.src = src;
+    nextVideo.load();
+    fadeTriggered = false;
 
-    const sleepingSrc = 'social_zool9727_sleeping_mouth_animation_video_--ar_11_--motion_low__f579137a-4e74-4633-9461-f05e6d7ab7d8_0.mp4';
-    const daytimeVideos = [
-      'mond1.mp4',
-      'mond2.mp4',
-      'mond3.mp4',
-      'mond4.mp4',
-      'mond5.mp4',
-      'mond6.mp4'
+    nextVideo.addEventListener('canplaythrough', function handleCanPlay() {
+      nextVideo.removeEventListener('canplaythrough', handleCanPlay);
+      nextVideo.currentTime = 0;
+      nextVideo.play();
+
+      nextVideo.classList.add('visible');
+      prevVideo.classList.remove('visible');
+      prevVideo.pause();
+
+      currentVideo = nextVideo;
+      attachProactiveFadeMonitor();
+    });
+  }
+
+  function playRandomDaytimeVideo() {
+    let nextIndex;
+    do {
+      nextIndex = Math.floor(Math.random() * daytimeVideos.length);
+    } while (daytimeVideos.length > 1 && nextIndex === lastPlayedIndex);
+
+    lastPlayedIndex = nextIndex;
+    crossfadeTo(daytimeVideos[nextIndex]);
+  }
+
+  function playSleepingLoop() {
+    currentVideo.src = sleepingSrc;
+    currentVideo.loop = true;
+    currentVideo.classList.add('visible');
+    currentVideo.play();
+  }
+
+  function playThursdayLoop() {
+    currentVideo.src = vanderghinsteSrc;
+    currentVideo.loop = true;
+    currentVideo.classList.add('visible');
+    currentVideo.play();
+  }
+
+  function attachProactiveFadeMonitor() {
+    currentVideo.addEventListener('timeupdate', function monitorFade() {
+      if (
+        !fadeTriggered &&
+        currentVideo.duration &&
+        currentVideo.currentTime >= currentVideo.duration - 1.3
+      ) {
+        fadeTriggered = true;
+        currentVideo.removeEventListener('timeupdate', monitorFade);
+
+        const minBreak = 300;
+        const maxBreak = 700;
+        const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
+        console.log(`Crossfading early (delay: ${Math.round(breakDuration)} ms)...`);
+
+        setTimeout(() => {
+          playRandomDaytimeVideo();
+        }, breakDuration);
+      }
+    });
+  }
+
+  if (isSundayOrMonday) {
+    currentVideo.src = 'bernardus1.mp4';
+    currentVideo.loop = true;
+    currentVideo.classList.add('visible');
+    currentVideo.play();
+  } else if (isThursday) {
+    playThursdayLoop();
+  } else if (isSleepingTime) {
+    playSleepingLoop();
+  } else {
+    playRandomDaytimeVideo();
+  }
+
+  function scheduleDailyReloads() {
+    const now = new Date();
+    const refreshTimes = [
+      { h: 2, m: 1 },
+      { h: 14, m: 1 }
     ];
 
-    const hour = new Date().getHours();
-    const day = new Date().getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const isSundayOrMonday = day === 0 || day === 1;
-    const isSleepingTime = hour >= 2 && hour < 14 && !isSundayOrMonday;
-    let lastPlayedIndex = -1;
+    refreshTimes.forEach(({ h, m }) => {
+      let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+      if (target <= now) target.setDate(target.getDate() + 1);
+      const delay = target.getTime() - now.getTime();
+      console.log(`Scheduling reload at ${target.toLocaleString()}`);
+      setTimeout(() => location.reload(), delay);
+    });
+  }
 
-    function crossfadeTo(src) {
-      const nextVideo = currentVideo === videoA ? videoB : videoA;
-      const prevVideo = currentVideo;
+  scheduleDailyReloads();
 
-      nextVideo.src = src;
-      nextVideo.load();
-      fadeTriggered = false;
-
-      nextVideo.addEventListener('canplaythrough', function handleCanPlay() {
-        nextVideo.removeEventListener('canplaythrough', handleCanPlay);
-        nextVideo.currentTime = 0;
-        nextVideo.play();
-
-        nextVideo.classList.add('visible');
-        prevVideo.classList.remove('visible');
-        prevVideo.pause();
-
-        currentVideo = nextVideo;
-        attachProactiveFadeMonitor();
-      });
-    }
-
-    function playRandomDaytimeVideo() {
-      let nextIndex;
-      do {
-        nextIndex = Math.floor(Math.random() * daytimeVideos.length);
-      } while (daytimeVideos.length > 1 && nextIndex === lastPlayedIndex);
-
-      lastPlayedIndex = nextIndex;
-      crossfadeTo(daytimeVideos[nextIndex]);
-    }
-
-    function playSleepingLoop() {
-      currentVideo.src = sleepingSrc;
-      currentVideo.loop = true;
-      currentVideo.classList.add('visible');
-      currentVideo.play();
-    }
-
-    function attachProactiveFadeMonitor() {
-      currentVideo.addEventListener('timeupdate', function monitorFade() {
-        if (
-          !fadeTriggered &&
-          currentVideo.duration &&
-          currentVideo.currentTime >= currentVideo.duration - 1.3
-        ) {
-          fadeTriggered = true;
-          currentVideo.removeEventListener('timeupdate', monitorFade);
-
-          const minBreak = 300;
-          const maxBreak = 700;
-          const breakDuration = Math.random() * (maxBreak - minBreak) + minBreak;
-          console.log(`Crossfading early (delay: ${Math.round(breakDuration)} ms)...`);
-
-          setTimeout(() => {
-            playRandomDaytimeVideo();
-          }, breakDuration);
-        }
-      });
-    }
-
-    if (isSundayOrMonday) {
-      currentVideo.src = 'bernardus1.mp4';
-      currentVideo.loop = true;
-      currentVideo.classList.add('visible');
-      currentVideo.play();
-    } else if (isSleepingTime) {
-      playSleepingLoop();
-    } else {
-      playRandomDaytimeVideo();
-    }
-
-    function scheduleDailyReloads() {
-      const now = new Date();
-      const refreshTimes = [
-        { h: 2, m: 1 },
-        { h: 14, m: 1 }
-      ];
-
-      refreshTimes.forEach(({ h, m }) => {
-        let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
-        if (target <= now) target.setDate(target.getDate() + 1);
-        const delay = target.getTime() - now.getTime();
-        console.log(`Scheduling reload at ${target.toLocaleString()}`);
-        setTimeout(() => location.reload(), delay);
-      });
-    }
-
-    scheduleDailyReloads();
-
-    setInterval(() => {
-      console.log('Refreshing site after 1 hour');
-      location.reload();
-    }, 3600000);
-  </script>
-</body>
-</html>
+  setInterval(() => {
+    console.log('Refreshing site after 1 hour');
+    location.reload();
+  }, 3600000);
+</script>
