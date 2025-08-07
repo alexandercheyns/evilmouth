@@ -53,7 +53,7 @@
     let fadeTriggered = false;
 
     const sleepingSrc = 'social_zool9727_sleeping_mouth_animation_video_--ar_11_--motion_low__f579137a-4e74-4633-9461-f05e6d7ab7d8_0.mp4';
-    const vanderghinsteSrc = 'vanderghinste.mp4';
+    const bernardusSrc = 'bernardus1.mp4';
     const daytimeVideos = [
       'mond1.mp4',
       'mond2.mp4',
@@ -65,9 +65,9 @@
 
     const now = new Date();
     const hour = now.getHours();
-    const day = now.getDay(); // 0 = Sunday, 4 = Thursday
+    const day = now.getDay(); // 0 = Sunday, 1 = Monday
     const isSundayOrMonday = day === 0 || day === 1;
-    const isSleepingTime = hour >= 2 && hour < 14 && !isSundayOrMonday && !isThursday;
+    const isSleepingTime = hour >= 2 && hour < 14 && !isSundayOrMonday;
     let lastPlayedIndex = -1;
 
     function crossfadeTo(src) {
@@ -139,10 +139,7 @@
     // Main logic
     if (isSundayOrMonday) {
       console.log("Sunday or Monday: playing bernardus1.mp4 loop");
-      playLoopingVideo('bernardus1.mp4');
-    } else if (isThursday) {
-      console.log("Thursday: playing vanderghinste.mp4 loop");
-      playLoopingVideo(vanderghinsteSrc);
+      playLoopingVideo(bernardusSrc);
     } else if (isSleepingTime) {
       console.log("Sleeping time: playing sleeping loop");
       playLoopingVideo(sleepingSrc);
